@@ -1,0 +1,130 @@
+---
+title: "did_demo"
+author: "Qinlu.Hu"
+date: "`2022/11/1`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+# Callaway and Sant’Anna (2020) 
+library(did)
+```
+
+# A simulation demo
+
+## (1) create simulation data
+```{r}
+time.periods <- 4
+sp <- reset.sim()
+sp$te <- 0     #create blank dataframe
+```
+
+```{r}
+# set seed so everything is reproducible
+set.seed(1814)
+
+# generate dataset with 4 time periods
+time.periods <- 4
+
+# add dynamic effects
+sp$te.e <- 1:time.periods
+
+# generate data set with these parameters
+# here, we dropped all units who are treated in time period 1 as they do not help us recover ATT(g,t)'s.
+dta <- build_sim_dataset(sp)
+
+# How many observations remained after dropping the ``always-treated'' units
+nrow(dta)
+#This is what the data looks like
+head(dta)
+```
+
+## (2) Estimating Group-Time Average Treatment Effects
+
+```{r}
+example_attgt <- att_gt(yname = "Y",
+                        tname = "period",
+                        idname = "id",
+                        gname = "G",
+                        xformla = ~X,
+                        data = dta
+                        )
+
+```
+
+```{r}
+summary(example_attgt)
+```
+
+## (3) plot group-time average treatment effects
+```{r}
+ggdid(example_attgt)
+```
+
+## (4) Aggregating group-time average treatment effects
+
+### Method 1: Simple Aggregation (a weighted average of all group-time average treatment effects with weights proportional to the group size.  This is available by calling the `aggte` function with `type = simple`)
+```{r}
+agg.simple <- aggte(example_attgt, type = "simple")
+summary(agg.simple)
+```
+
+### Method 2: Dynamic Effects and Event Studies( aggregate group-time effects into an event study plot)
+
+```{r}
+agg.es <- aggte(example_attgt, type = "dynamic")
+summary(agg.es)
+ggdid(agg.es)
+```
+
+### Method 3:Group-Specific Effects(average effects specific to each group)
+
+```{r}
+agg.gs <- aggte(example_attgt, type = "group")
+summary(agg.gs)
+ggdid(agg.gs)
+```
+
+### Method 4: Calendar Time Effects(aggregations across different time periods)
+
+```{r}
+agg.ct <- aggte(example_attgt, type = "calendar")
+summary(agg.ct)
+ggdid(agg.ct)
+```
+## (5) other options
+
+### chose control group
+```{r}
+# By default, the did package uses the group of units that never participate in the treatment as the control group.
+#  The other option for the control group is to use the “not yet treated”
+
+example_attgt_altcontrol <- att_gt(yname = "Y",
+                                   tname = "period",
+                                   idname = "id",
+                                   gname = "G",
+                                   xformla = ~X,
+                                   data = dta,
+                                   control_group = "notyettreated"          
+                                   )
+summary(example_attgt_altcontrol)
+```
+
+### choose estimation method
+
+```{r}
+# By default, the did package uses “doubly robust” estimators 
+# The other options are “ipw” for inverse probability weighting and “reg” # for regression
+example_attgt_reg <- att_gt(yname = "Y",
+                            tname = "period",
+                            idname = "id",
+                            gname = "G",
+                            xformla = ~X,
+                            data = dta,
+                            est_method = "reg"
+                            )
+summary(example_attgt_reg)
+
+```
+

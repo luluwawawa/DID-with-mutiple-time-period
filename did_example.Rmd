@@ -1,0 +1,74 @@
+---
+title: "did_example"
+author: "Qinlu.Hu"
+date: "`2022/11/1`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(did)
+```
+
+# An example with real data
+
+## (1) import a subset of data that comes from Callaway and Sant’Anna (2020)
+
+```{r}
+data(mpdta)
+```
+
+## This is a dataset that contains county-level teen employment rates from 2003-2007. 
+### Y= lemp
+
+```{r}
+head(mpdta)
+```
+
+## (2) The Effect of the Minimum Wage on Youth Employment
+
+### group-time average treatment effects
+
+```{r}
+# estimate group-time average treatment effects without covariates
+mw.attgt <- att_gt(yname = "lemp",
+                   gname = "first.treat",
+                   idname = "countyreal",
+                   tname = "year",
+                   xformla = ~1,
+                   data = mpdta,
+                   )
+```
+
+```{r}
+summary(mw.attgt)
+```
+
+### plot the results
+```{r}
+ggdid(mw.attgt, ylim = c(-.3,.3))
+```
+
+### aggregate the group-time average treatment effects
+```{r}
+mw.dyn <- aggte(mw.attgt, type = "dynamic")
+summary(mw.dyn)
+```
+
+### plot
+```{r}
+ggdid(mw.dyn, ylim = c(-.3,.3))
+```
+
+### run all the same results including a covariate
+
+```{r}
+mw.attgt.X <- att_gt(yname = "lemp",
+                   gname = "first.treat",
+                   idname = "countyreal",
+                   tname = "year",
+                   xformla = ~lpop,
+                   data = mpdta,
+                   )
+```
+
