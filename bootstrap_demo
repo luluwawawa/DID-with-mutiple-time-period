@@ -1,0 +1,60 @@
+import numpy as np
+import pandas as pd
+from matplotlib import pyplot as plt
+
+#1.simulatin data
+data= np.array([1,2,3,4,5,6,7,8,9,10])
+# sample mean and std
+sample_mean= np.mean(data)
+sample_variance= np.var(data)
+print(sample_mean,sample_variance)
+
+# 2. normal estiamtion
+mean_estimator= sample_mean
+var_estimator= sample_variance/(len(data))
+print(mean_estimator,var_estimator)
+
+# 3. boostrap estimation
+from random import choices
+index= np.random.choice(range(len(data)),len(data)) #从0到10，有放回的抽取10个
+# print(index)
+#
+times=1000
+sample_mean_list=[]
+for i in range(times):
+    temp_index= np.random.choice(range(len(data)),len(data))
+    temp_mean= np.mean(data[temp_index])
+    sample_mean_list.append(temp_mean)
+
+#
+boostrap_mean_estimator= np.mean(sample_mean_list)
+boostrap_var_estimator= np.var(sample_mean_list)
+print(boostrap_mean_estimator,boostrap_var_estimator)
+
+#
+plt.hist(sample_mean_list)
+plt.show()
+
+# 4. create a boostrap class
+class Boostrap():
+    def __init__(self,data,times):
+        self.data= data
+        self.times=times
+        self.boostrap_mean= self.boostrap()[0]
+        self.boostrap_var= self.boostrap()[1]
+
+    def boostrap(self):
+        sample_mean_list = []
+        for i in range(self.times):
+            temp_index = np.random.choice(range(len(self.data)), len(self.data))
+            temp_mean = np.mean(self.data[temp_index])
+            sample_mean_list.append(temp_mean)
+        boostrap_mean_hist= plt.hist(sample_mean_list)
+        plt.show()
+        return np.mean(sample_mean_list),np.var(sample_mean_list)
+
+boost1= Boostrap(data,1000)
+print(boost1.data)
+print(boost1.times)
+print(boost1.boostrap_mean)
+print(boost1.boostrap_var)
